@@ -15,11 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Tensor, Tensor2D, Tensor3D} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
-import {TensorLike} from '../types';
-import {op} from './operation';
+import { ENGINE } from '../engine';
+import { Tensor, Tensor2D, Tensor3D } from '../tensor';
+import { convertToTensor } from '../tensor_util_env';
+import { TensorLike } from '../types';
+import { op } from './operation';
 
 /**
  * Creates a `tf.Tensor` from an image.
@@ -42,11 +42,11 @@ import {op} from './operation';
  */
 /** @doc {heading: 'Browser', namespace: 'browser'} */
 function fromPixels_(
-    pixels: ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement,
-    numChannels = 3): Tensor3D {
+  pixels: ImageData | HTMLImageElement | OffscreenCanvas | HTMLCanvasElement | HTMLVideoElement,
+  numChannels = 3): Tensor3D {
   if (numChannels > 4) {
     throw new Error(
-        'Cannot construct Tensor with more than 4 channels from pixels.');
+      'Cannot construct Tensor with more than 4 channels from pixels.');
   }
   return ENGINE.fromPixels(pixels, numChannels);
 }
@@ -70,8 +70,8 @@ function fromPixels_(
  */
 /** @doc {heading: 'Browser', namespace: 'browser'} */
 export async function toPixels(
-    img: Tensor2D|Tensor3D|TensorLike,
-    canvas?: HTMLCanvasElement): Promise<Uint8ClampedArray> {
+  img: Tensor2D | Tensor3D | TensorLike,
+  canvas?: OffscreenCanvas | HTMLCanvasElement): Promise<Uint8ClampedArray> {
   let $img = convertToTensor(img, 'img', 'toPixels');
   if (!(img instanceof Tensor)) {
     // Assume int32 if user passed a native array.
@@ -79,22 +79,22 @@ export async function toPixels(
   }
   if ($img.rank !== 2 && $img.rank !== 3) {
     throw new Error(
-        `toPixels only supports rank 2 or 3 tensors, got rank ${$img.rank}.`);
+      `toPixels only supports rank 2 or 3 tensors, got rank ${$img.rank}.`);
   }
   const [height, width] = $img.shape.slice(0, 2);
   const depth = $img.rank === 2 ? 1 : $img.shape[2];
 
   if (depth > 4 || depth === 2) {
     throw new Error(
-        `toPixels only supports depth of size ` +
-        `1, 3 or 4 but got ${depth}`);
+      `toPixels only supports depth of size ` +
+      `1, 3 or 4 but got ${depth}`);
   }
 
   const data = await $img.data();
   const minTensor = $img.min();
   const maxTensor = $img.max();
   const [minVals, maxVals] =
-      await Promise.all([minTensor.data(), maxTensor.data()]);
+    await Promise.all([minTensor.data(), maxTensor.data()]);
   const min = minVals[0];
   const max = maxVals[0];
   minTensor.dispose();
@@ -102,19 +102,19 @@ export async function toPixels(
   if ($img.dtype === 'float32') {
     if (min < 0 || max > 1) {
       throw new Error(
-          `Tensor values for a float32 Tensor must be in the ` +
-          `range [0 - 1] but got range [${min} - ${max}].`);
+        `Tensor values for a float32 Tensor must be in the ` +
+        `range [0 - 1] but got range [${min} - ${max}].`);
     }
   } else if ($img.dtype === 'int32') {
     if (min < 0 || max > 255) {
       throw new Error(
-          `Tensor values for a int32 Tensor must be in the ` +
-          `range [0 - 255] but got range [${min} - ${max}].`);
+        `Tensor values for a int32 Tensor must be in the ` +
+        `range [0 - 255] but got range [${min} - ${max}].`);
     }
   } else {
     throw new Error(
-        `Unsupported type for toPixels: ${$img.dtype}.` +
-        ` Please use float32 or int32 tensors.`);
+      `Unsupported type for toPixels: ${$img.dtype}.` +
+      ` Please use float32 or int32 tensors.`);
   }
   const multiplier = $img.dtype === 'float32' ? 255 : 1;
   const bytes = new Uint8ClampedArray(width * height * 4);
@@ -145,7 +145,7 @@ export async function toPixels(
     bytes[j + 3] = Math.round(a);
   }
 
-  if (canvas != null) {
+  if (canvas) {
     canvas.width = width;
     canvas.height = height;
     const ctx = canvas.getContext('2d');
@@ -158,4 +158,4 @@ export async function toPixels(
   return bytes;
 }
 
-export const fromPixels = op({fromPixels_});
+export const fromPixels = op({ fromPixels_ });

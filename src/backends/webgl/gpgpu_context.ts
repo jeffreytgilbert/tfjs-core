@@ -15,17 +15,17 @@
  * =============================================================================
  */
 
-import {ENV} from '../../environment';
+import { ENV } from '../../environment';
 import * as util from '../../util';
-import {getWebGLContext, setWebGLContext} from './canvas_util';
+import { getWebGLContext, setWebGLContext } from './canvas_util';
 import * as gpgpu_util from './gpgpu_util';
-import {TextureConfig} from './gpgpu_util';
+import { TextureConfig } from './gpgpu_util';
 import * as tex_util from './tex_util';
-import {WebGL1DisjointQueryTimerExtension, WebGL2DisjointQueryTimerExtension} from './webgl_types';
+import { WebGL1DisjointQueryTimerExtension, WebGL2DisjointQueryTimerExtension } from './webgl_types';
 import * as webgl_util from './webgl_util';
 
 export interface FenceContext {
-  query: WebGLQuery|WebGLSync;
+  query: WebGLQuery | WebGLSync;
   isFencePassed(): boolean;
 }
 
@@ -35,13 +35,13 @@ export class GPGPUContext {
   textureHalfFloatExtension: {};
   colorBufferFloatExtension: {};
   colorBufferHalfFloatExtension: {};
-  disjointQueryTimerExtension: WebGL2DisjointQueryTimerExtension|
-      WebGL1DisjointQueryTimerExtension;
+  disjointQueryTimerExtension: WebGL2DisjointQueryTimerExtension |
+    WebGL1DisjointQueryTimerExtension;
   vertexBuffer: WebGLBuffer;
   indexBuffer: WebGLBuffer;
   framebuffer: WebGLFramebuffer;
-  outputTexture: WebGLTexture|null = null;
-  program: WebGLProgram|null = null;
+  outputTexture: WebGLTexture | null = null;
+  program: WebGLProgram | null = null;
   private disposed = false;
   private disjoint: boolean;
   private textureConfig: TextureConfig;
@@ -57,19 +57,19 @@ export class GPGPUContext {
     // WebGL 2.0 enables texture floats without an extension.
     if (ENV.getNumber('WEBGL_VERSION') === 1) {
       this.textureFloatExtension = webgl_util.getExtensionOrThrow(
-          this.gl, this.debug, 'OES_texture_float');
+        this.gl, this.debug, 'OES_texture_float');
       this.colorBufferFloatExtension =
-          this.gl.getExtension('WEBGL_color_buffer_float');
+        this.gl.getExtension('WEBGL_color_buffer_float');
 
       if (!ENV.getBool('WEBGL_RENDER_FLOAT32_ENABLED')) {
         this.textureHalfFloatExtension = webgl_util.getExtensionOrThrow(
-            this.gl, this.debug, 'OES_texture_half_float');
+          this.gl, this.debug, 'OES_texture_half_float');
         this.colorBufferHalfFloatExtension =
-            this.gl.getExtension('EXT_color_buffer_half_float');
+          this.gl.getExtension('EXT_color_buffer_half_float');
       }
     } else {
       this.colorBufferFloatExtension = webgl_util.getExtensionOrThrow(
-          this.gl, this.debug, 'EXT_color_buffer_float');
+        this.gl, this.debug, 'EXT_color_buffer_float');
     }
 
     this.vertexBuffer = gpgpu_util.createVertexBuffer(this.gl, this.debug);
@@ -77,7 +77,7 @@ export class GPGPUContext {
     this.framebuffer = webgl_util.createFramebuffer(this.gl, this.debug);
 
     this.textureConfig =
-        gpgpu_util.getTextureConfig(this.gl, this.textureHalfFloatExtension);
+      gpgpu_util.getTextureConfig(this.gl, this.textureHalfFloatExtension);
   }
 
   private get debug(): boolean {
@@ -90,140 +90,140 @@ export class GPGPUContext {
     }
     if (this.program != null) {
       console.warn(
-          'Disposing a GPGPUContext that still has a bound WebGLProgram.' +
-          ' This is probably a resource leak, delete the program with ' +
-          'GPGPUContext.deleteProgram before disposing.');
+        'Disposing a GPGPUContext that still has a bound WebGLProgram.' +
+        ' This is probably a resource leak, delete the program with ' +
+        'GPGPUContext.deleteProgram before disposing.');
     }
     if (this.outputTexture != null) {
       console.warn(
-          'Disposing a GPGPUContext that still has a bound output matrix ' +
-          'texture.  This is probably a resource leak, delete the output ' +
-          'matrix texture with GPGPUContext.deleteMatrixTexture before ' +
-          'disposing.');
+        'Disposing a GPGPUContext that still has a bound output matrix ' +
+        'texture.  This is probably a resource leak, delete the output ' +
+        'matrix texture with GPGPUContext.deleteMatrixTexture before ' +
+        'disposing.');
     }
     const gl = this.gl;
     webgl_util.callAndCheck(gl, this.debug, () => gl.finish());
     webgl_util.callAndCheck(
-        gl, this.debug, () => gl.bindFramebuffer(gl.FRAMEBUFFER, null));
+      gl, this.debug, () => gl.bindFramebuffer(gl.FRAMEBUFFER, null));
     webgl_util.callAndCheck(
-        gl, this.debug, () => gl.deleteFramebuffer(this.framebuffer));
+      gl, this.debug, () => gl.deleteFramebuffer(this.framebuffer));
     webgl_util.callAndCheck(
-        gl, this.debug, () => gl.bindBuffer(gl.ARRAY_BUFFER, null));
+      gl, this.debug, () => gl.bindBuffer(gl.ARRAY_BUFFER, null));
     webgl_util.callAndCheck(
-        gl, this.debug, () => gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null));
+      gl, this.debug, () => gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null));
     webgl_util.callAndCheck(
-        gl, this.debug, () => gl.deleteBuffer(this.indexBuffer));
+      gl, this.debug, () => gl.deleteBuffer(this.indexBuffer));
     this.disposed = true;
   }
 
   public createFloat32MatrixTexture(rows: number, columns: number):
-      WebGLTexture {
+    WebGLTexture {
     this.throwIfDisposed();
     return gpgpu_util.createFloat32MatrixTexture(
-        this.gl, this.debug, rows, columns, this.textureConfig);
+      this.gl, this.debug, rows, columns, this.textureConfig);
   }
 
   public createFloat16MatrixTexture(rows: number, columns: number):
-      WebGLTexture {
+    WebGLTexture {
     this.throwIfDisposed();
     return gpgpu_util.createFloat16MatrixTexture(
-        this.gl, this.debug, rows, columns, this.textureConfig);
+      this.gl, this.debug, rows, columns, this.textureConfig);
   }
 
   public createUnsignedBytesMatrixTexture(rows: number, columns: number):
-      WebGLTexture {
+    WebGLTexture {
     this.throwIfDisposed();
     return gpgpu_util.createUnsignedBytesMatrixTexture(
-        this.gl, this.debug, rows, columns, this.textureConfig);
+      this.gl, this.debug, rows, columns, this.textureConfig);
   }
 
   public uploadPixelDataToTexture(
-      texture: WebGLTexture,
-      pixels: ImageData|HTMLImageElement|HTMLCanvasElement) {
+    texture: WebGLTexture,
+    pixels: ImageData | HTMLImageElement | OffscreenCanvas | HTMLCanvasElement) {
     this.throwIfDisposed();
     gpgpu_util.uploadPixelDataToTexture(this.gl, this.debug, texture, pixels);
   }
 
   public createFloat16PackedMatrixTexture(rows: number, columns: number):
-      WebGLTexture {
+    WebGLTexture {
     this.throwIfDisposed();
     return gpgpu_util.createFloat16PackedMatrixTexture(
-        this.gl, this.debug, rows, columns, this.textureConfig);
+      this.gl, this.debug, rows, columns, this.textureConfig);
   }
 
   public createPackedMatrixTexture(rows: number, columns: number):
-      WebGLTexture {
+    WebGLTexture {
     this.throwIfDisposed();
     return gpgpu_util.createPackedMatrixTexture(
-        this.gl, this.debug, rows, columns, this.textureConfig);
+      this.gl, this.debug, rows, columns, this.textureConfig);
   }
 
   public deleteMatrixTexture(texture: WebGLTexture) {
     this.throwIfDisposed();
     if (this.outputTexture === texture) {
       webgl_util.unbindColorTextureFromFramebuffer(
-          this.gl, this.debug, this.framebuffer);
+        this.gl, this.debug, this.framebuffer);
       this.outputTexture = null;
     }
     webgl_util.callAndCheck(
-        this.gl, this.debug, () => this.gl.deleteTexture(texture));
+      this.gl, this.debug, () => this.gl.deleteTexture(texture));
   }
 
   public uploadMatrixToTexture(
-      texture: WebGLTexture, rows: number, columns: number,
-      matrix: Float32Array) {
+    texture: WebGLTexture, rows: number, columns: number,
+    matrix: Float32Array) {
     this.throwIfDisposed();
     const numChannels = webgl_util.getNumChannels();
     return gpgpu_util.uploadMatrixToTexture(
-        this.gl, this.debug, texture, rows, columns, matrix, numChannels,
-        this.textureConfig);
+      this.gl, this.debug, texture, rows, columns, matrix, numChannels,
+      this.textureConfig);
   }
 
   public uploadMatrixToPackedTexture(
-      texture: WebGLTexture, batch: number, rows: number, columns: number,
-      physicalRows: number, physicalCols: number, matrix: Float32Array) {
+    texture: WebGLTexture, batch: number, rows: number, columns: number,
+    physicalRows: number, physicalCols: number, matrix: Float32Array) {
     this.throwIfDisposed();
     return gpgpu_util.uploadMatrixToPackedTexture(
-        this.gl, this.debug, texture, batch, rows, columns, physicalRows,
-        physicalCols, matrix, this.textureConfig);
+      this.gl, this.debug, texture, batch, rows, columns, physicalRows,
+      physicalCols, matrix, this.textureConfig);
   }
 
   public downloadFloat32MatrixFromOutputTexture(
-      texture: WebGLTexture, rows: number, columns: number): Float32Array {
+    texture: WebGLTexture, rows: number, columns: number): Float32Array {
     return this.downloadMatrixDriver(
-        texture,
-        () => gpgpu_util.downloadFloat32MatrixFromOutputTexture(
-            this.gl, this.debug, rows, columns, this.textureConfig));
+      texture,
+      () => gpgpu_util.downloadFloat32MatrixFromOutputTexture(
+        this.gl, this.debug, rows, columns, this.textureConfig));
   }
 
   public downloadByteEncodedFloatMatrixFromOutputTexture(
-      texture: WebGLTexture, rows: number, columns: number): Float32Array {
+    texture: WebGLTexture, rows: number, columns: number): Float32Array {
     return this.downloadMatrixDriver(
-        texture,
-        () => gpgpu_util.downloadByteEncodedFloatMatrixFromOutputTexture(
-            this.gl, this.debug, rows, columns, this.textureConfig));
+      texture,
+      () => gpgpu_util.downloadByteEncodedFloatMatrixFromOutputTexture(
+        this.gl, this.debug, rows, columns, this.textureConfig));
   }
 
   public downloadPackedMatrixFromBuffer(
-      buffer: WebGLBuffer, batch: number, rows: number, columns: number,
-      physicalRows: number, physicalCols: number): Float32Array {
+    buffer: WebGLBuffer, batch: number, rows: number, columns: number,
+    physicalRows: number, physicalCols: number): Float32Array {
     return gpgpu_util.downloadPackedMatrixFromBuffer(
-        this.gl, buffer, batch, rows, columns, physicalRows, physicalCols,
-        this.textureConfig);
+      this.gl, buffer, batch, rows, columns, physicalRows, physicalCols,
+      this.textureConfig);
   }
 
   public downloadFloat32MatrixFromBuffer(
-      buffer: WebGLBuffer, rows: number, columns: number): Float32Array {
+    buffer: WebGLBuffer, rows: number, columns: number): Float32Array {
     return gpgpu_util.downloadFloat32MatrixFromBuffer(
-        this.gl, buffer, rows, columns, this.textureConfig);
+      this.gl, buffer, rows, columns, this.textureConfig);
   }
 
   public maybeCreateBufferFromTexture(
-      texture: WebGLTexture, rows: number, columns: number): WebGLBuffer
-      |WebGLTexture {
+    texture: WebGLTexture, rows: number, columns: number): WebGLBuffer
+    | WebGLTexture {
     this.bindTextureToFrameBuffer(texture);
     const result = gpgpu_util.maybeCreateBufferFromOutputTexture(
-        this.gl, this.debug, texture, rows, columns, this.textureConfig);
+      this.gl, this.debug, texture, rows, columns, this.textureConfig);
     this.unbindTextureToFrameBuffer();
     return result;
   }
@@ -234,7 +234,7 @@ export class GPGPUContext {
   }
 
   private createFence(gl: WebGLRenderingContext): FenceContext {
-    let query: WebGLQuery|WebGLSync;
+    let query: WebGLQuery | WebGLSync;
     let isFencePassed: () => boolean;
 
     if (ENV.getBool('WEBGL_FENCE_API_ENABLED')) {
@@ -246,16 +246,16 @@ export class GPGPUContext {
       isFencePassed = () => {
         const status = gl2.clientWaitSync(sync, 0, 0);
         return status === gl2.ALREADY_SIGNALED ||
-            status === gl2.CONDITION_SATISFIED;
+          status === gl2.CONDITION_SATISFIED;
       };
 
       query = sync;
     } else if (
-        ENV.getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION') > 0) {
+      ENV.getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION') > 0) {
       query = this.beginQuery();
       this.endQuery();
       isFencePassed = () => this.isQueryAvailable(
-          query, ENV.getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION'));
+        query, ENV.getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION'));
     } else {
       // If we have no way to fence, return true immediately. This will fire in
       // WebGL 1.0 when there is no disjoint query timer. In this case, because
@@ -264,17 +264,17 @@ export class GPGPUContext {
       isFencePassed = () => true;
     }
 
-    return {query, isFencePassed};
+    return { query, isFencePassed };
   }
 
   public downloadMatrixFromPackedTexture(
-      texture: WebGLTexture, batch: number, rows: number, columns: number,
-      physicalRows: number, physicalCols: number): Float32Array {
+    texture: WebGLTexture, batch: number, rows: number, columns: number,
+    physicalRows: number, physicalCols: number): Float32Array {
     return this.downloadMatrixDriver(
-        texture,
-        () => gpgpu_util.downloadMatrixFromPackedOutputTexture(
-            this.gl, this.debug, batch, rows, columns, physicalRows,
-            physicalCols, this.textureConfig));
+      texture,
+      () => gpgpu_util.downloadMatrixFromPackedOutputTexture(
+        this.gl, this.debug, batch, rows, columns, physicalRows,
+        physicalCols, this.textureConfig));
   }
 
   private vertexAttrsAreBound = false;
@@ -283,17 +283,17 @@ export class GPGPUContext {
     this.throwIfDisposed();
     const gl = this.gl;
     const fragmentShader: WebGLShader =
-        webgl_util.createFragmentShader(gl, this.debug, fragmentShaderSource);
+      webgl_util.createFragmentShader(gl, this.debug, fragmentShaderSource);
     const vertexShader: WebGLShader =
-        gpgpu_util.createVertexShader(gl, this.debug);
+      gpgpu_util.createVertexShader(gl, this.debug);
     const program: WebGLProgram = webgl_util.createProgram(
-        gl,
-        this.debug,
+      gl,
+      this.debug,
     );
     webgl_util.callAndCheck(
-        gl, this.debug, () => gl.attachShader(program, vertexShader));
+      gl, this.debug, () => gl.attachShader(program, vertexShader));
     webgl_util.callAndCheck(
-        gl, this.debug, () => gl.attachShader(program, fragmentShader));
+      gl, this.debug, () => gl.attachShader(program, fragmentShader));
     webgl_util.linkProgram(gl, this.debug, program);
     if (this.debug) {
       webgl_util.validateProgram(gl, this.debug, program);
@@ -301,7 +301,7 @@ export class GPGPUContext {
     if (!this.vertexAttrsAreBound) {
       this.setProgram(program);
       this.vertexAttrsAreBound = gpgpu_util.bindVertexProgramAttributeStreams(
-          gl, this.debug, this.program, this.vertexBuffer);
+        gl, this.debug, this.program, this.vertexBuffer);
     }
     return program;
   }
@@ -313,80 +313,80 @@ export class GPGPUContext {
     }
     if (program != null) {
       webgl_util.callAndCheck(
-          this.gl, this.debug, () => this.gl.deleteProgram(program));
+        this.gl, this.debug, () => this.gl.deleteProgram(program));
     }
   }
 
-  public setProgram(program: WebGLProgram|null) {
+  public setProgram(program: WebGLProgram | null) {
     this.throwIfDisposed();
     this.program = program;
     if ((this.program != null) && this.debug) {
       webgl_util.validateProgram(this.gl, this.debug, this.program);
     }
     webgl_util.callAndCheck(
-        this.gl, this.debug, () => this.gl.useProgram(program));
+      this.gl, this.debug, () => this.gl.useProgram(program));
   }
 
   public getUniformLocation(
-      program: WebGLProgram, uniformName: string,
-      shouldThrow = true): WebGLUniformLocation {
+    program: WebGLProgram, uniformName: string,
+    shouldThrow = true): WebGLUniformLocation {
     this.throwIfDisposed();
     if (shouldThrow) {
       return webgl_util.getProgramUniformLocationOrThrow(
-          this.gl, this.debug, program, uniformName);
+        this.gl, this.debug, program, uniformName);
     } else {
       return webgl_util.getProgramUniformLocation(
-          this.gl, program, uniformName);
+        this.gl, program, uniformName);
     }
   }
 
   public getAttributeLocation(program: WebGLProgram, attribute: string):
-      number {
+    number {
     this.throwIfDisposed();
     return webgl_util.callAndCheck(
-        this.gl, this.debug,
-        () => this.gl.getAttribLocation(program, attribute));
+      this.gl, this.debug,
+      () => this.gl.getAttribLocation(program, attribute));
   }
 
   public getUniformLocationNoThrow(program: WebGLProgram, uniformName: string):
-      WebGLUniformLocation {
+    WebGLUniformLocation {
     this.throwIfDisposed();
     return this.gl.getUniformLocation(program, uniformName);
   }
 
   public setInputMatrixTexture(
-      inputMatrixTexture: WebGLTexture, uniformLocation: WebGLUniformLocation,
-      textureUnit: number) {
+    inputMatrixTexture: WebGLTexture, uniformLocation: WebGLUniformLocation,
+    textureUnit: number) {
     this.throwIfDisposed();
     this.throwIfNoProgram();
     webgl_util.bindTextureToProgramUniformSampler(
-        this.gl, this.debug, this.program, inputMatrixTexture, uniformLocation,
-        textureUnit);
+      this.gl, this.debug, this.program, inputMatrixTexture, uniformLocation,
+      textureUnit);
   }
 
   public setOutputMatrixTexture(
-      outputMatrixTexture: WebGLTexture, rows: number, columns: number) {
+    outputMatrixTexture: WebGLTexture, rows: number, columns: number) {
     this.setOutputMatrixTextureDriver(outputMatrixTexture, columns, rows);
   }
 
   public setOutputPackedMatrixTexture(
-      outputPackedMatrixTexture: WebGLTexture, rows: number, columns: number) {
+    outputPackedMatrixTexture: WebGLTexture, rows: number, columns: number) {
     this.throwIfDisposed();
     const [width, height] =
-        tex_util.getPackedMatrixTextureShapeWidthHeight(rows, columns);
+      tex_util.getPackedMatrixTextureShapeWidthHeight(rows, columns);
     this.setOutputMatrixTextureDriver(outputPackedMatrixTexture, width, height);
   }
 
   public setOutputMatrixWriteRegion(
-      startRow: number, numRows: number, startColumn: number,
-      numColumns: number) {
+    startRow: number, numRows: number, startColumn: number,
+    numColumns: number) {
     this.setOutputMatrixWriteRegionDriver(
-        startColumn, startRow, numColumns, numRows);
+      startColumn, startRow, numColumns, numRows);
   }
 
   public setOutputPackedMatrixWriteRegion(
-      startRow: number, numRows: number, startColumn: number,
-      numColumns: number) {
+    startRow: number, numRows: number, startColumn: number,
+    numColumns: number) {
     throw new Error('setOutputPackedMatrixWriteRegion not implemented.');
   }
 
@@ -405,8 +405,8 @@ export class GPGPUContext {
       this.debugValidate();
     }
     webgl_util.callAndCheck(
-        gl, this.debug,
-        () => gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0));
+      gl, this.debug,
+      () => gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0));
   }
 
   public blockUntilAllProgramsCompleted() {
@@ -415,17 +415,17 @@ export class GPGPUContext {
   }
 
   private getQueryTimerExtension(): WebGL1DisjointQueryTimerExtension
-      |WebGL2DisjointQueryTimerExtension {
+    | WebGL2DisjointQueryTimerExtension {
     if (this.disjointQueryTimerExtension == null) {
       this.disjointQueryTimerExtension =
-          webgl_util.getExtensionOrThrow(
-              this.gl, this.debug,
-              ENV.getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION') ===
-                      2 ?
-                  'EXT_disjoint_timer_query_webgl2' :
-                  'EXT_disjoint_timer_query') as
-              WebGL1DisjointQueryTimerExtension |
-          WebGL2DisjointQueryTimerExtension;
+        webgl_util.getExtensionOrThrow(
+          this.gl, this.debug,
+          ENV.getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION') ===
+            2 ?
+            'EXT_disjoint_timer_query_webgl2' :
+            'EXT_disjoint_timer_query') as
+        WebGL1DisjointQueryTimerExtension |
+        WebGL2DisjointQueryTimerExtension;
     }
     return this.disjointQueryTimerExtension;
   }
@@ -466,15 +466,15 @@ export class GPGPUContext {
 
   public async waitForQueryAndGetTime(query: WebGLQuery): Promise<number> {
     await util.repeatedTry(
-        () => this.disposed ||  // while testing contexts are created / disposed
-                                // in rapid succession, so without this check we
-                                // may poll for the query timer indefinitely
-            this.isQueryAvailable(
-                query,
-                ENV.getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION') as
-                    number));
+      () => this.disposed ||  // while testing contexts are created / disposed
+        // in rapid succession, so without this check we
+        // may poll for the query timer indefinitely
+        this.isQueryAvailable(
+          query,
+          ENV.getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION') as
+          number));
     return this.getQueryTime(
-        query, ENV.getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION'));
+      query, ENV.getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION'));
   }
 
   private getQueryTime(query: WebGLQuery, queryTimerVersion: number): number {
@@ -492,14 +492,14 @@ export class GPGPUContext {
       const ext = this.getQueryTimerExtensionWebGL1();
 
       const timeElapsedNanos =
-          ext.getQueryObjectEXT(query, ext.QUERY_RESULT_EXT);
+        ext.getQueryObjectEXT(query, ext.QUERY_RESULT_EXT);
       // Return milliseconds.
       return timeElapsedNanos / 1000000;
     }
   }
 
   private isQueryAvailable(query: WebGLQuery, queryTimerVersion: number):
-      boolean {
+    boolean {
     if (queryTimerVersion === 0) {
       return true;
     }
@@ -509,7 +509,7 @@ export class GPGPUContext {
       const ext = this.getQueryTimerExtensionWebGL2();
 
       const available =
-          gl2.getQueryParameter(query, gl2.QUERY_RESULT_AVAILABLE);
+        gl2.getQueryParameter(query, gl2.QUERY_RESULT_AVAILABLE);
       if (this.disjoint == null) {
         this.disjoint = this.gl.getParameter(ext.GPU_DISJOINT_EXT);
       }
@@ -519,7 +519,7 @@ export class GPGPUContext {
       const ext = this.getQueryTimerExtensionWebGL1();
 
       const available =
-          ext.getQueryObjectEXT(query, ext.QUERY_RESULT_AVAILABLE_EXT);
+        ext.getQueryObjectEXT(query, ext.QUERY_RESULT_AVAILABLE_EXT);
       if (this.disjoint == null) {
         this.disjoint = this.gl.getParameter(ext.GPU_DISJOINT_EXT);
       }
@@ -540,14 +540,14 @@ export class GPGPUContext {
     // Find the last query that has finished.
     const index = linearSearchLastTrue(this.itemsToPoll.map(x => x.isDoneFn));
     for (let i = 0; i <= index; ++i) {
-      const {resolveFn} = this.itemsToPoll[i];
+      const { resolveFn } = this.itemsToPoll[i];
       resolveFn();
     }
     this.itemsToPoll = this.itemsToPoll.slice(index + 1);
   }
 
   private addItemToPoll(isDoneFn: () => boolean, resolveFn: () => void) {
-    this.itemsToPoll.push({isDoneFn, resolveFn});
+    this.itemsToPoll.push({ isDoneFn, resolveFn });
     if (this.itemsToPoll.length > 1) {
       // We already have a running loop that polls.
       return;
@@ -563,7 +563,7 @@ export class GPGPUContext {
   private bindTextureToFrameBuffer(texture: WebGLTexture) {
     this.throwIfDisposed();
     webgl_util.bindColorTextureToFramebuffer(
-        this.gl, this.debug, texture, this.framebuffer);
+      this.gl, this.debug, texture, this.framebuffer);
     if (this.debug) {
       webgl_util.validateFramebuffer(this.gl);
     }
@@ -572,19 +572,19 @@ export class GPGPUContext {
   private unbindTextureToFrameBuffer() {
     if (this.outputTexture != null) {
       webgl_util.bindColorTextureToFramebuffer(
-          this.gl, this.debug, this.outputTexture, this.framebuffer);
+        this.gl, this.debug, this.outputTexture, this.framebuffer);
       if (this.debug) {
         webgl_util.validateFramebuffer(this.gl);
       }
     } else {
       webgl_util.unbindColorTextureFromFramebuffer(
-          this.gl, this.debug, this.framebuffer);
+        this.gl, this.debug, this.framebuffer);
     }
   }
 
   private downloadMatrixDriver(
-      texture: WebGLTexture,
-      downloadAndDecode: () => Float32Array): Float32Array {
+    texture: WebGLTexture,
+    downloadAndDecode: () => Float32Array): Float32Array {
     this.bindTextureToFrameBuffer(texture);
     const result = downloadAndDecode();
     this.unbindTextureToFrameBuffer();
@@ -593,27 +593,27 @@ export class GPGPUContext {
   }
 
   private setOutputMatrixTextureDriver(
-      outputMatrixTextureMaybePacked: WebGLTexture, width: number,
-      height: number) {
+    outputMatrixTextureMaybePacked: WebGLTexture, width: number,
+    height: number) {
     this.throwIfDisposed();
     const gl = this.gl;
     webgl_util.bindColorTextureToFramebuffer(
-        gl, this.debug, outputMatrixTextureMaybePacked, this.framebuffer);
+      gl, this.debug, outputMatrixTextureMaybePacked, this.framebuffer);
     if (this.debug) {
       webgl_util.validateFramebuffer(gl);
     }
     this.outputTexture = outputMatrixTextureMaybePacked;
     webgl_util.callAndCheck(
-        gl, this.debug, () => gl.viewport(0, 0, width, height));
+      gl, this.debug, () => gl.viewport(0, 0, width, height));
     webgl_util.callAndCheck(
-        gl, this.debug, () => gl.scissor(0, 0, width, height));
+      gl, this.debug, () => gl.scissor(0, 0, width, height));
   }
 
   private setOutputMatrixWriteRegionDriver(
-      x: number, y: number, width: number, height: number) {
+    x: number, y: number, width: number, height: number) {
     this.throwIfDisposed();
     webgl_util.callAndCheck(
-        this.gl, this.debug, () => this.gl.scissor(x, y, width, height));
+      this.gl, this.debug, () => this.gl.scissor(x, y, width, height));
   }
 
   private throwIfDisposed() {

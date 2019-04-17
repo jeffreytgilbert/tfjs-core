@@ -15,16 +15,16 @@
  * =============================================================================
  */
 
-import {BackendTimingInfo, DataMover, KernelBackend} from './backends/backend';
-import {Environment, setEnvironmentGlobal} from './environment';
-import {Profiler} from './profiler';
-import {backpropagateGradients, getFilteredNodesXToY, NamedGradientMap, TapeNode} from './tape';
-import {DataId, setTensorTracker, Tensor, Tensor3D, TensorTracker, Variable} from './tensor';
-import {GradSaveFunc, NamedTensorMap, NamedVariableMap, TensorContainer} from './tensor_types';
-import {getTensorsInContainer} from './tensor_util';
-import {DataType, DataValues} from './types';
+import { BackendTimingInfo, DataMover, KernelBackend } from './backends/backend';
+import { Environment, setEnvironmentGlobal } from './environment';
+import { Profiler } from './profiler';
+import { backpropagateGradients, getFilteredNodesXToY, NamedGradientMap, TapeNode } from './tape';
+import { DataId, setTensorTracker, Tensor, Tensor3D, TensorTracker, Variable } from './tensor';
+import { GradSaveFunc, NamedTensorMap, NamedVariableMap, TensorContainer } from './tensor_types';
+import { getTensorsInContainer } from './tensor_util';
+import { DataType, DataValues } from './types';
 import * as util from './util';
-import {bytesFromStringArray, makeOnesTypedArray, now, sizeFromShape} from './util';
+import { bytesFromStringArray, makeOnesTypedArray, now, sizeFromShape } from './util';
 
 /**
  * A function that computes an output. The save function is for saving tensors
@@ -39,10 +39,10 @@ export type ForwardFunc<T> = (backend: KernelBackend, save?: GradSaveFunc) => T;
  * }
  */
 export type CustomGradientFunc<T extends Tensor> =
-    (...inputs: Array<Tensor|GradSaveFunc>) => {
-      value: T;
-      gradFunc: (dy: T, saved: Tensor[]) => Tensor | Tensor[];
-    };
+  (...inputs: Array<Tensor | GradSaveFunc>) => {
+    value: T;
+    gradFunc: (dy: T, saved: Tensor[]) => Tensor | Tensor[];
+  };
 
 export type MemoryInfo = {
   numTensors: number; numDataBuffers: number; numBytes: number;
@@ -74,7 +74,7 @@ export interface TensorManager {
   registerTensor(a: Tensor, backend?: KernelBackend): void;
   registerVariable(v: Variable): void;
   disposeTensor(a: Tensor): void;
-  memory(): {numDataBuffers: number; numBytes: number;};
+  memory(): { numDataBuffers: number; numBytes: number; };
 }
 
 interface ScopeState {
@@ -117,7 +117,7 @@ class EngineState {
 
   profiling = false;
   activeProfile: ProfileInfo =
-      {newBytes: 0, newTensors: 0, peakBytes: 0, kernels: [], result: null};
+    { newBytes: 0, newTensors: 0, peakBytes: 0, kernels: [], result: null };
 
   dispose() {
     for (const variableName in this.registeredVariables) {
@@ -131,9 +131,9 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
 
   private backendInstance: KernelBackend;
   backendName: string;
-  registry: {[id: string]: KernelBackend} = {};
+  registry: { [id: string]: KernelBackend } = {};
   registryFactory:
-      {[id: string]: {factory: () => KernelBackend, priority: number}} = {};
+    { [id: string]: { factory: () => KernelBackend, priority: number } } = {};
 
   private profiler: Profiler;
 
@@ -174,15 +174,15 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
   }
 
   registerBackend(
-      backendName: string, factory: () => KernelBackend,
-      priority = 1): boolean {
+    backendName: string, factory: () => KernelBackend,
+    priority = 1): boolean {
     if (backendName in this.registryFactory) {
       console.warn(
-          `${backendName} backend was already registered. ` +
-          `Reusing existing backend factory.`);
+        `${backendName} backend was already registered. ` +
+        `Reusing existing backend factory.`);
       return false;
     }
-    this.registryFactory[backendName] = {factory, priority};
+    this.registryFactory[backendName] = { factory, priority };
     return true;
   }
 
@@ -216,7 +216,7 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
     const registryFactoryEntry = ENGINE.registryFactory[backendName];
     if (registryFactoryEntry == null) {
       throw new Error(
-          `Cannot initialize backend ${backendName}, no registration found.`);
+        `Cannot initialize backend ${backendName}, no registration found.`);
     }
 
     try {
@@ -247,11 +247,11 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
       throw new Error('No backend found in registry.');
     }
     const sortedBackends =
-        Object.keys(this.registryFactory).sort((a: string, b: string) => {
-          // Highest priority comes first.
-          return this.registryFactory[b].priority -
-              this.registryFactory[a].priority;
-        });
+      Object.keys(this.registryFactory).sort((a: string, b: string) => {
+        // Highest priority comes first.
+        return this.registryFactory[b].priority -
+          this.registryFactory[a].priority;
+      });
 
     for (let i = 0; i < sortedBackends.length; i++) {
       const backend = sortedBackends[i];
@@ -262,16 +262,16 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
     }
 
     throw new Error(
-        `Could not initialize any backends, all backend initializations ` +
-        `failed.`);
+      `Could not initialize any backends, all backend initializations ` +
+      `failed.`);
   }
 
   moveData(dataId: DataId) {
     this.write(dataId, this.readSync(dataId));
   }
 
-  tidy<T extends TensorContainer>(nameOrFn: string|ScopeFn<T>, fn?: ScopeFn<T>):
-      T {
+  tidy<T extends TensorContainer>(nameOrFn: string | ScopeFn<T>, fn?: ScopeFn<T>):
+    T {
     let name: string = null;
     if (fn == null) {
       // Called with only 1 argument.
@@ -283,13 +283,13 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
       // Called with 2 arguments.
       if (typeof nameOrFn !== 'string' && !(nameOrFn instanceof String)) {
         throw new Error(
-            'When calling with two arguments, the first argument ' +
-            'to tidy() must be a string');
+          'When calling with two arguments, the first argument ' +
+          'to tidy() must be a string');
       }
       if (typeof fn !== 'function') {
         throw new Error(
-            'When calling with two arguments, the 2nd argument ' +
-            'to tidy() must be a function');
+          'When calling with two arguments, the 2nd argument ' +
+          'to tidy() must be a function');
       }
       name = nameOrFn as string;
       // TODO(nsthorat,smilkov): Do operation logging and performance
@@ -297,13 +297,13 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
     }
     let result: T;
     return this.scopedRun(
-        () => this.startScope(name), () => this.endScope(result), () => {
-          result = fn();
-          if (result instanceof Promise) {
-            console.error('Cannot return a Promise inside of tidy.');
-          }
-          return result;
-        });
+      () => this.startScope(name), () => this.endScope(result), () => {
+        result = fn();
+        if (result instanceof Promise) {
+          console.error('Cannot return a Promise inside of tidy.');
+        }
+        return result;
+      });
   }
 
   private scopedRun<T>(start: () => void, end: () => void, f: () => T): T {
@@ -335,21 +335,21 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
    * execution.
    */
   private clone(x: Tensor): Tensor {
-    const y = Tensor.make(x.shape, {dataId: x.dataId}, x.dtype);
+    const y = Tensor.make(x.shape, { dataId: x.dataId }, x.dtype);
     this.addTapeNode([x], y, dy => [dy.toFloat()]);
     return y;
   }
 
-  runKernel<T extends Tensor|Tensor[], I extends NamedTensorMap>(
-      forwardFunc: ForwardFunc<T>,
-      inputs: I,
-      backwardsFunc?: (dy: T, saved: Tensor[]) => {[P in keyof I]: () => I[P]},
-      ): T {
+  runKernel<T extends Tensor | Tensor[], I extends NamedTensorMap>(
+    forwardFunc: ForwardFunc<T>,
+    inputs: I,
+    backwardsFunc?: (dy: T, saved: Tensor[]) => { [P in keyof I]: () => I[P] },
+  ): T {
     let result: T;
     let saved: Tensor[] = [];
     const isTapeOn = this.isTapeOn();
     const scopeName =
-        this.state.activeScope != null ? this.state.activeScope.name : '';
+      this.state.activeScope != null ? this.state.activeScope.name : '';
     const saveFunc: GradSaveFunc = (tensors) => {
       // Do not save unless we are recording to the tape. Otherwise it would
       // cause a mem leak since we would never run backprop, which disposes
@@ -365,14 +365,14 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
 
     // Stop recording to a tape when running a kernel.
     this.scopedRun(
-        () => this.state.kernelDepth++, () => this.state.kernelDepth--, () => {
-          if (!this.ENV.getBool('DEBUG')) {
-            result = forwardFunc(this.backend, saveFunc);
-          } else {
-            result = this.profiler.profileKernel(
-                scopeName, () => forwardFunc(this.backend, saveFunc));
-          }
-        });
+      () => this.state.kernelDepth++, () => this.state.kernelDepth--, () => {
+        if (!this.ENV.getBool('DEBUG')) {
+          result = forwardFunc(this.backend, saveFunc);
+        } else {
+          result = this.profiler.profileKernel(
+            scopeName, () => forwardFunc(this.backend, saveFunc));
+        }
+      });
 
     if (isTapeOn) {
       const tapeNode: TapeNode = {
@@ -397,8 +397,8 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
         totalTensorsSnapshot: this.state.numTensors,
         inputShapes: Object.keys(inputs).map(key => inputs[key].shape),
         outputShape: Array.isArray(result) ?
-            (result as Tensor[]).map(item => (item as Tensor).shape) :
-            (result as Tensor).shape
+          (result as Tensor[]).map(item => (item as Tensor).shape) :
+          (result as Tensor).shape
       });
     }
 
@@ -407,10 +407,10 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
 
   // TensorManager implementation.
 
-  registerTensor(a: Tensor|Variable, backend?: KernelBackend): void {
+  registerTensor(a: Tensor | Variable, backend?: KernelBackend): void {
     const refCount = this.state.tensorInfo.has(a.dataId) ?
-        this.state.tensorInfo.get(a.dataId).refCount :
-        0;
+      this.state.tensorInfo.get(a.dataId).refCount :
+      0;
     this.state.numTensors++;
     if (a.dtype === 'string') {
       this.state.numStringTensors++;
@@ -498,8 +498,8 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
         info.reasons = [];
       }
       info.reasons.push(
-          'Memory usage by string tensors is approximate ' +
-          '(2 bytes per character)');
+        'Memory usage by string tensors is approximate ' +
+        '(2 bytes per character)');
     }
     return info;
   }
@@ -516,10 +516,10 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
     this.state.profiling = false;
 
     this.state.activeProfile.peakBytes = Math.max(
-        ...this.state.activeProfile.kernels.map(d => d.totalBytesSnapshot));
+      ...this.state.activeProfile.kernels.map(d => d.totalBytesSnapshot));
     this.state.activeProfile.newBytes = this.state.numBytes - startBytes;
     this.state.activeProfile.newTensors =
-        this.state.numTensors - startNumTensors;
+      this.state.numTensors - startNumTensors;
     return this.state.activeProfile;
   }
 
@@ -528,8 +528,8 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
   }
 
   private addTapeNode(
-      inputs: Tensor[], result: Tensor,
-      gradientsFunc: (dy: Tensor) => Tensor[]): void {
+    inputs: Tensor[], result: Tensor,
+    gradientsFunc: (dy: Tensor) => Tensor[]): void {
     const inputsMap: NamedTensorMap = {};
     inputs.forEach((input, idx) => {
       inputsMap[idx] = input;
@@ -594,7 +594,7 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
   endScope(result?: TensorContainer) {
     const tensorsToTrackInParent = getTensorsInContainer(result);
     const tensorsToTrackInParentSet =
-        new Set(tensorsToTrackInParent.map(t => t.id));
+      new Set(tensorsToTrackInParent.map(t => t.id));
 
     // Dispose the arrays tracked in this scope.
     for (let i = 0; i < this.state.activeScope.track.length; i++) {
@@ -606,8 +606,8 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
 
     const oldScope = this.state.scopeStack.pop();
     this.state.activeScope = this.state.scopeStack.length === 0 ?
-        null :
-        this.state.scopeStack[this.state.scopeStack.length - 1];
+      null :
+      this.state.scopeStack[this.state.scopeStack.length - 1];
 
     // Track the current result in the parent scope.
     tensorsToTrackInParent.forEach(tensor => {
@@ -626,39 +626,39 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
    * gradient, which defaults to `1`.
    */
   gradients<T extends Tensor>(
-      f: () => T, xs: Tensor[], dy?: T,
-      allowNoGradients = false): {value: T, grads: Tensor[]} {
+    f: () => T, xs: Tensor[], dy?: T,
+    allowNoGradients = false): { value: T, grads: Tensor[] } {
     util.assert(
-        xs.length > 0, () => 'gradients() received an empty list of xs.');
+      xs.length > 0, () => 'gradients() received an empty list of xs.');
     if (dy != null && dy.dtype !== 'float32') {
       throw new Error(`dy must have 'float32' dtype, but has '${dy.dtype}'`);
     }
 
     const y = this.scopedRun(
-        () => this.startTape(), () => this.endTape(),
-        () => this.tidy('forward', f));
+      () => this.startTape(), () => this.endTape(),
+      () => this.tidy('forward', f));
 
     util.assert(
-        y instanceof Tensor,
-        () => 'The result y returned by f() must be a tensor.');
+      y instanceof Tensor,
+      () => 'The result y returned by f() must be a tensor.');
     // Filter out the nodes that don't connect x => y.
     const filteredTape = getFilteredNodesXToY(this.state.activeTape, xs, y);
     if (!allowNoGradients && filteredTape.length === 0 && xs.length > 0) {
       throw new Error(
-          'Cannot compute gradient of y=f(x) with respect to x. Make sure ' +
-          'that the f you passed encloses all operations that lead from x ' +
-          'to y.');
+        'Cannot compute gradient of y=f(x) with respect to x. Make sure ' +
+        'that the f you passed encloses all operations that lead from x ' +
+        'to y.');
     }
 
     return this.tidy('backward', () => {
-      const accumulatedGradientMap: {[tensorId: number]: Tensor} = {};
+      const accumulatedGradientMap: { [tensorId: number]: Tensor } = {};
       accumulatedGradientMap[y.id] = (dy == null) ? ones(y.shape) : dy;
 
       // Backprop gradients through the filtered nodes.
       backpropagateGradients(
-          accumulatedGradientMap, filteredTape,
-          // Pass the tidy function to avoid circular dep with `tape.ts`.
-          f => this.tidy(f as ScopeFn<Tensor>));
+        accumulatedGradientMap, filteredTape,
+        // Pass the tidy function to avoid circular dep with `tape.ts`.
+        f => this.tidy(f as ScopeFn<Tensor>));
       const grads = xs.map(x => accumulatedGradientMap[x.id]);
 
       if (this.state.gradientDepth === 0) {
@@ -671,20 +671,20 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
         });
         this.state.activeTape = null;
       }
-      return {value: y, grads};
+      return { value: y, grads };
     });
   }
 
   customGrad<T extends Tensor>(f: CustomGradientFunc<T>):
-      (...args: Array<Tensor|GradSaveFunc>) => T {
+    (...args: Array<Tensor | GradSaveFunc>) => T {
     util.assert(
-        util.isFunction(f),
-        () => 'The f passed in customGrad(f) must be a function.');
+      util.isFunction(f),
+      () => 'The f passed in customGrad(f) must be a function.');
     return (...inputs: Tensor[]): T => {
       util.assert(
-          inputs.every(t => t instanceof Tensor),
-          () => 'The args passed in customGrad(f)(x1, x2,...) must all be ' +
-              'tensors');
+        inputs.every(t => t instanceof Tensor),
+        () => 'The args passed in customGrad(f)(x1, x2,...) must all be ' +
+          'tensors');
 
       let res: {
         value: T,
@@ -695,39 +695,39 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
         inputMap[i] = input;
       });
       return this.runKernel(
-          (_, save) => {
-            res = f(...[...inputs, save]);
-            util.assert(
-                res.value instanceof Tensor,
-                () => 'The function f passed in customGrad(f) must return an ' +
-                    'object where `obj.value` is a tensor');
-            util.assert(
-                util.isFunction(res.gradFunc),
-                () => 'The function f passed in customGrad(f) must return an ' +
-                    'object where `obj.gradFunc` is a function.');
-            return res.value;
-          },
-          inputMap,
-          (dy: T, saved: Tensor[]) => {
-            const gradRes = res.gradFunc(dy, saved);
-            const grads: Tensor[] =
-                Array.isArray(gradRes) ? gradRes : [gradRes];
-            util.assert(
-                grads.length === inputs.length,
-                () => 'The function f passed in customGrad(f) must return an ' +
-                    'object where `obj.gradFunc` is a function that returns ' +
-                    'the same number of tensors as inputs passed to f(...).');
-            util.assert(
-                grads.every(t => t instanceof Tensor),
-                () => 'The function f passed in customGrad(f) must return an ' +
-                    'object where `obj.gradFunc` is a function that returns ' +
-                    'a list of only tensors.');
-            const gradMap: {[key: string]: () => Tensor} = {};
-            grads.forEach((grad, i) => {
-              gradMap[i] = () => grad;
-            });
-            return gradMap;
+        (_, save) => {
+          res = f(...[...inputs, save]);
+          util.assert(
+            res.value instanceof Tensor,
+            () => 'The function f passed in customGrad(f) must return an ' +
+              'object where `obj.value` is a tensor');
+          util.assert(
+            util.isFunction(res.gradFunc),
+            () => 'The function f passed in customGrad(f) must return an ' +
+              'object where `obj.gradFunc` is a function.');
+          return res.value;
+        },
+        inputMap,
+        (dy: T, saved: Tensor[]) => {
+          const gradRes = res.gradFunc(dy, saved);
+          const grads: Tensor[] =
+            Array.isArray(gradRes) ? gradRes : [gradRes];
+          util.assert(
+            grads.length === inputs.length,
+            () => 'The function f passed in customGrad(f) must return an ' +
+              'object where `obj.gradFunc` is a function that returns ' +
+              'the same number of tensors as inputs passed to f(...).');
+          util.assert(
+            grads.every(t => t instanceof Tensor),
+            () => 'The function f passed in customGrad(f) must return an ' +
+              'object where `obj.gradFunc` is a function that returns ' +
+              'a list of only tensors.');
+          const gradMap: { [key: string]: () => Tensor } = {};
+          grads.forEach((grad, i) => {
+            gradMap[i] = () => grad;
           });
+          return gradMap;
+        });
     };
   }
 
@@ -761,8 +761,8 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
     return info.backend.read(dataId);
   }
   fromPixels(
-      pixels: ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement,
-      numChannels: number): Tensor3D {
+    pixels: ImageData | HTMLImageElement | OffscreenCanvas | HTMLCanvasElement | HTMLVideoElement,
+    numChannels: number): Tensor3D {
     return this.backend.fromPixels(pixels, numChannels);
   }
   async time(query: () => void): Promise<TimingInfo> {
@@ -811,15 +811,17 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
 
 function ones(shape: number[]): Tensor {
   const values = makeOnesTypedArray(sizeFromShape(shape), 'float32');
-  return Tensor.make(shape, {values});
+  return Tensor.make(shape, { values });
 }
 
-let GLOBAL: {_tfengine: Engine};
-function getGlobalNamespace(): {_tfengine: Engine} {
+let GLOBAL: { _tfengine: Engine };
+function getGlobalNamespace(): { _tfengine: Engine } {
   if (GLOBAL == null) {
     // tslint:disable-next-line:no-any
-    let ns: any;
-    if (typeof (window) !== 'undefined') {
+    let ns: any; // WindowOrWorkerGlobalScope
+    if (typeof WorkerGlobalScope !== 'undefined') {
+      ns = self;
+    } else if (typeof (window) !== 'undefined') {
       ns = window;
     } else if (typeof (global) !== 'undefined') {
       ns = global;

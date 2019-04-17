@@ -15,11 +15,11 @@
  * =============================================================================
  */
 
-import {ENV} from '../environment';
-import {getModelArtifactsInfoForJSON} from './io_utils';
-import {ModelStoreManagerRegistry} from './model_management';
-import {IORouter, IORouterRegistry} from './router_registry';
-import {IOHandler, ModelArtifacts, ModelArtifactsInfo, ModelStoreManager, SaveResult} from './types';
+import { ENV } from '../environment';
+import { getModelArtifactsInfoForJSON } from './io_utils';
+import { ModelStoreManagerRegistry } from './model_management';
+import { IORouter, IORouterRegistry } from './router_registry';
+import { IOHandler, ModelArtifacts, ModelArtifactsInfo, ModelStoreManager, SaveResult } from './types';
 
 const DATABASE_NAME = 'tensorflowjs';
 const DATABASE_VERSION = 1;
@@ -52,25 +52,25 @@ function getIndexedDBFactory(): IDBFactory {
     //   Maybe point to a doc page on the web and/or automatically determine
     //   the available IOHandlers and print them in the error message.
     throw new Error(
-        'Failed to obtain IndexedDB factory because the current environment' +
-        'is not a web browser.');
+      'Failed to obtain IndexedDB factory because the current environment' +
+      'is not a web browser.');
   }
   // tslint:disable-next-line:no-any
-  const theWindow: any = window;
+  const theWindow: any = window || self; // indexDB appears to be supported for workers
   const factory = theWindow.indexedDB || theWindow.mozIndexedDB ||
-      theWindow.webkitIndexedDB || theWindow.msIndexedDB ||
-      theWindow.shimIndexedDB;
+    theWindow.webkitIndexedDB || theWindow.msIndexedDB ||
+    theWindow.shimIndexedDB;
   if (factory == null) {
     throw new Error(
-        'The current browser does not appear to support IndexedDB.');
+      'The current browser does not appear to support IndexedDB.');
   }
   return factory;
 }
 
 function setUpDatabase(openRequest: IDBRequest) {
   const db = openRequest.result as IDBDatabase;
-  db.createObjectStore(MODEL_STORE_NAME, {keyPath: 'modelPath'});
-  db.createObjectStore(INFO_STORE_NAME, {keyPath: 'modelPath'});
+  db.createObjectStore(MODEL_STORE_NAME, { keyPath: 'modelPath' });
+  db.createObjectStore(INFO_STORE_NAME, { keyPath: 'modelPath' });
 }
 
 /**
@@ -89,7 +89,7 @@ export class BrowserIndexedDB implements IOHandler {
 
     if (modelPath == null || !modelPath) {
       throw new Error(
-          'For IndexedDB, modelPath must not be null, undefined or empty.');
+        'For IndexedDB, modelPath must not be null, undefined or empty.');
     }
     this.modelPath = modelPath;
   }
@@ -98,12 +98,12 @@ export class BrowserIndexedDB implements IOHandler {
     // TODO(cais): Support saving GraphDef models.
     if (modelArtifacts.modelTopology instanceof ArrayBuffer) {
       throw new Error(
-          'BrowserLocalStorage.save() does not support saving model topology ' +
-          'in binary formats yet.');
+        'BrowserLocalStorage.save() does not support saving model topology ' +
+        'in binary formats yet.');
     }
 
     return this.databaseAction(this.modelPath, modelArtifacts) as
-        Promise<SaveResult>;
+      Promise<SaveResult>;
   }
 
   async load(): Promise<ModelArtifacts> {
@@ -125,8 +125,8 @@ export class BrowserIndexedDB implements IOHandler {
    *   of `ModelArtifacts`, if the action is get.
    */
   private databaseAction(modelPath: string, modelArtifacts?: ModelArtifacts):
-      Promise<ModelArtifacts|SaveResult> {
-    return new Promise<ModelArtifacts|SaveResult>((resolve, reject) => {
+    Promise<ModelArtifacts | SaveResult> {
+    return new Promise<ModelArtifacts | SaveResult>((resolve, reject) => {
       const openRequest = this.indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
       openRequest.onupgradeneeded = () => setUpDatabase(openRequest);
 
@@ -142,8 +142,8 @@ export class BrowserIndexedDB implements IOHandler {
             if (getRequest.result == null) {
               db.close();
               return reject(new Error(
-                  `Cannot find model with path '${this.modelPath}' ` +
-                  `in IndexedDB.`));
+                `Cannot find model with path '${this.modelPath}' ` +
+                `in IndexedDB.`));
             } else {
               resolve(getRequest.result.modelArtifacts);
             }
@@ -156,12 +156,12 @@ export class BrowserIndexedDB implements IOHandler {
         } else {
           // Put model into object store.
           const modelArtifactsInfo: ModelArtifactsInfo =
-              getModelArtifactsInfoForJSON(modelArtifacts);
+            getModelArtifactsInfoForJSON(modelArtifacts);
           // First, put ModelArtifactsInfo into info store.
           const infoTx = db.transaction(INFO_STORE_NAME, 'readwrite');
           let infoStore = infoTx.objectStore(INFO_STORE_NAME);
           const putInfoRequest =
-              infoStore.put({modelPath: this.modelPath, modelArtifactsInfo});
+            infoStore.put({ modelPath: this.modelPath, modelArtifactsInfo });
           let modelTx: IDBTransaction;
           putInfoRequest.onsuccess = () => {
             // Second, put model data into model store.
@@ -172,7 +172,7 @@ export class BrowserIndexedDB implements IOHandler {
               modelArtifacts,
               modelArtifactsInfo
             });
-            putModelRequest.onsuccess = () => resolve({modelArtifactsInfo});
+            putModelRequest.onsuccess = () => resolve({ modelArtifactsInfo });
             putModelRequest.onerror = error => {
               // If the put-model request fails, roll back the info entry as
               // well.
@@ -206,7 +206,7 @@ export class BrowserIndexedDB implements IOHandler {
   }
 }
 
-export const indexedDBRouter: IORouter = (url: string|string[]) => {
+export const indexedDBRouter: IORouter = (url: string | string[]) => {
   if (!ENV.getBool('IS_BROWSER')) {
     return null;
   } else {
@@ -243,8 +243,8 @@ export function browserIndexedDB(modelPath: string): IOHandler {
 
 function maybeStripScheme(key: string) {
   return key.startsWith(BrowserIndexedDB.URL_SCHEME) ?
-      key.slice(BrowserIndexedDB.URL_SCHEME.length) :
-      key;
+    key.slice(BrowserIndexedDB.URL_SCHEME.length) :
+    key;
 }
 
 export class BrowserIndexedDBManager implements ModelStoreManager {
@@ -254,41 +254,41 @@ export class BrowserIndexedDBManager implements ModelStoreManager {
     this.indexedDB = getIndexedDBFactory();
   }
 
-  async listModels(): Promise<{[path: string]: ModelArtifactsInfo}> {
-    return new Promise<{[path: string]: ModelArtifactsInfo}>(
-        (resolve, reject) => {
-          const openRequest =
-              this.indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
-          openRequest.onupgradeneeded = () => setUpDatabase(openRequest);
+  async listModels(): Promise<{ [path: string]: ModelArtifactsInfo }> {
+    return new Promise<{ [path: string]: ModelArtifactsInfo }>(
+      (resolve, reject) => {
+        const openRequest =
+          this.indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
+        openRequest.onupgradeneeded = () => setUpDatabase(openRequest);
 
-          openRequest.onsuccess = () => {
-            const db = openRequest.result as IDBDatabase;
-            const tx = db.transaction(INFO_STORE_NAME, 'readonly');
-            const store = tx.objectStore(INFO_STORE_NAME);
-            // tslint:disable:max-line-length
-            // Need to cast `store` as `any` here because TypeScript's DOM
-            // library does not have the `getAll()` method even though the
-            // method is supported in the latest version of most mainstream
-            // browsers:
-            // https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore/getAll
-            // tslint:enable:max-line-length
-            // tslint:disable-next-line:no-any
-            const getAllInfoRequest = (store as any).getAll() as IDBRequest;
-            getAllInfoRequest.onsuccess = () => {
-              const out: {[path: string]: ModelArtifactsInfo} = {};
-              for (const item of getAllInfoRequest.result) {
-                out[item.modelPath] = item.modelArtifactsInfo;
-              }
-              resolve(out);
-            };
-            getAllInfoRequest.onerror = error => {
-              db.close();
-              return reject(getAllInfoRequest.error);
-            };
-            tx.oncomplete = () => db.close();
+        openRequest.onsuccess = () => {
+          const db = openRequest.result as IDBDatabase;
+          const tx = db.transaction(INFO_STORE_NAME, 'readonly');
+          const store = tx.objectStore(INFO_STORE_NAME);
+          // tslint:disable:max-line-length
+          // Need to cast `store` as `any` here because TypeScript's DOM
+          // library does not have the `getAll()` method even though the
+          // method is supported in the latest version of most mainstream
+          // browsers:
+          // https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore/getAll
+          // tslint:enable:max-line-length
+          // tslint:disable-next-line:no-any
+          const getAllInfoRequest = (store as any).getAll() as IDBRequest;
+          getAllInfoRequest.onsuccess = () => {
+            const out: { [path: string]: ModelArtifactsInfo } = {};
+            for (const item of getAllInfoRequest.result) {
+              out[item.modelPath] = item.modelArtifactsInfo;
+            }
+            resolve(out);
           };
-          openRequest.onerror = error => reject(openRequest.error);
-        });
+          getAllInfoRequest.onerror = error => {
+            db.close();
+            return reject(getAllInfoRequest.error);
+          };
+          tx.oncomplete = () => db.close();
+        };
+        openRequest.onerror = error => reject(openRequest.error);
+      });
   }
 
   async removeModel(path: string): Promise<ModelArtifactsInfo> {
@@ -308,8 +308,8 @@ export class BrowserIndexedDBManager implements ModelStoreManager {
           if (getInfoRequest.result == null) {
             db.close();
             return reject(new Error(
-                `Cannot find model with path '${path}' ` +
-                `in IndexedDB.`));
+              `Cannot find model with path '${path}' ` +
+              `in IndexedDB.`));
           } else {
             // First, delete the entry in the info store.
             const deleteInfoRequest = infoStore.delete(path);
@@ -319,9 +319,9 @@ export class BrowserIndexedDBManager implements ModelStoreManager {
               const modelStore = modelTx.objectStore(MODEL_STORE_NAME);
               const deleteModelRequest = modelStore.delete(path);
               deleteModelRequest.onsuccess = () =>
-                  resolve(getInfoRequest.result.modelArtifactsInfo);
+                resolve(getInfoRequest.result.modelArtifactsInfo);
               deleteModelRequest.onerror = error =>
-                  reject(getInfoRequest.error);
+                reject(getInfoRequest.error);
             };
             // Proceed with deleting model data regardless of whether deletion
             // of info data succeeds or not.
@@ -356,7 +356,7 @@ if (ENV.getBool('IS_BROWSER')) {
   // don't support Local Storage.
   try {
     ModelStoreManagerRegistry.registerManager(
-        BrowserIndexedDB.URL_SCHEME, new BrowserIndexedDBManager());
+      BrowserIndexedDB.URL_SCHEME, new BrowserIndexedDBManager());
   } catch (err) {
   }
 }

@@ -15,12 +15,12 @@
  * =============================================================================
  */
 
-import {ENV} from '../environment';
-import {assert} from '../util';
-import {arrayBufferToBase64String, base64StringToArrayBuffer, getModelArtifactsInfoForJSON} from './io_utils';
-import {ModelStoreManagerRegistry} from './model_management';
-import {IORouter, IORouterRegistry} from './router_registry';
-import {IOHandler, ModelArtifacts, ModelArtifactsInfo, ModelStoreManager, SaveResult} from './types';
+import { ENV } from '../environment';
+import { assert } from '../util';
+import { arrayBufferToBase64String, base64StringToArrayBuffer, getModelArtifactsInfoForJSON } from './io_utils';
+import { ModelStoreManagerRegistry } from './model_management';
+import { IORouter, IORouterRegistry } from './router_registry';
+import { IOHandler, ModelArtifacts, ModelArtifactsInfo, ModelStoreManager, SaveResult } from './types';
 
 const PATH_SEPARATOR = '/';
 const PATH_PREFIX = 'tensorflowjs_models';
@@ -37,10 +37,11 @@ const MODEL_METADATA_SUFFIX = 'model_metadata';
  */
 export function purgeLocalStorageArtifacts(): string[] {
   if (!ENV.getBool('IS_BROWSER') ||
-      typeof window.localStorage === 'undefined') {
+    typeof window === 'undefined' ||
+    typeof window.localStorage === 'undefined') {
     throw new Error(
-        'purgeLocalStorageModels() cannot proceed because local storage is ' +
-        'unavailable in the current environment.');
+      'purgeLocalStorageModels() cannot proceed because local storage is ' +
+      'unavailable in the current environment.');
   }
   const LS = window.localStorage;
   const purgedModelPaths: string[] = [];
@@ -71,7 +72,7 @@ function getModelKeys(path: string): {
     weightSpecs: [PATH_PREFIX, path, WEIGHT_SPECS_SUFFIX].join(PATH_SEPARATOR),
     weightData: [PATH_PREFIX, path, WEIGHT_DATA_SUFFIX].join(PATH_SEPARATOR),
     modelMetadata:
-        [PATH_PREFIX, path, MODEL_METADATA_SUFFIX].join(PATH_SEPARATOR)
+      [PATH_PREFIX, path, MODEL_METADATA_SUFFIX].join(PATH_SEPARATOR)
   };
 }
 
@@ -92,8 +93,8 @@ function getModelPathFromKey(key: string) {
 
 function maybeStripScheme(key: string) {
   return key.startsWith(BrowserLocalStorage.URL_SCHEME) ?
-      key.slice(BrowserLocalStorage.URL_SCHEME.length) :
-      key;
+    key.slice(BrowserLocalStorage.URL_SCHEME.length) :
+    key;
 }
 
 declare type LocalStorageKeys = {
@@ -118,19 +119,19 @@ export class BrowserLocalStorage implements IOHandler {
 
   constructor(modelPath: string) {
     if (!ENV.getBool('IS_BROWSER') ||
-        typeof window.localStorage === 'undefined') {
+      typeof window.localStorage === 'undefined') {
       // TODO(cais): Add more info about what IOHandler subtypes are
       // available.
       //   Maybe point to a doc page on the web and/or automatically determine
       //   the available IOHandlers and print them in the error message.
       throw new Error(
-          'The current environment does not support local storage.');
+        'The current environment does not support local storage.');
     }
     this.LS = window.localStorage;
 
     if (modelPath == null || !modelPath) {
       throw new Error(
-          'For local storage, modelPath must not be null, undefined or empty.');
+        'For local storage, modelPath must not be null, undefined or empty.');
     }
     this.modelPath = modelPath;
     this.keys = getModelKeys(this.modelPath);
@@ -148,29 +149,29 @@ export class BrowserLocalStorage implements IOHandler {
   async save(modelArtifacts: ModelArtifacts): Promise<SaveResult> {
     if (modelArtifacts.modelTopology instanceof ArrayBuffer) {
       throw new Error(
-          'BrowserLocalStorage.save() does not support saving model topology ' +
-          'in binary formats yet.');
+        'BrowserLocalStorage.save() does not support saving model topology ' +
+        'in binary formats yet.');
     } else {
       const topology = JSON.stringify(modelArtifacts.modelTopology);
       const weightSpecs = JSON.stringify(modelArtifacts.weightSpecs);
 
       const modelArtifactsInfo: ModelArtifactsInfo =
-          getModelArtifactsInfoForJSON(modelArtifacts);
+        getModelArtifactsInfoForJSON(modelArtifacts);
 
       try {
         this.LS.setItem(this.keys.info, JSON.stringify(modelArtifactsInfo));
         this.LS.setItem(this.keys.topology, topology);
         this.LS.setItem(this.keys.weightSpecs, weightSpecs);
         this.LS.setItem(
-            this.keys.weightData,
-            arrayBufferToBase64String(modelArtifacts.weightData));
+          this.keys.weightData,
+          arrayBufferToBase64String(modelArtifacts.weightData));
         this.LS.setItem(this.keys.modelMetadata, JSON.stringify({
           format: modelArtifacts.format,
           generatedBy: modelArtifacts.generatedBy,
           convertedBy: modelArtifacts.convertedBy
         }));
 
-        return {modelArtifactsInfo};
+        return { modelArtifactsInfo };
       } catch (err) {
         // If saving failed, clean up all items saved so far.
         this.LS.removeItem(this.keys.info);
@@ -180,11 +181,11 @@ export class BrowserLocalStorage implements IOHandler {
         this.LS.removeItem(this.keys.modelMetadata);
 
         throw new Error(
-            `Failed to save model '${this.modelPath}' to local storage: ` +
-            `size quota being exceeded is a possible cause of this failure: ` +
-            `modelTopologyBytes=${modelArtifactsInfo.modelTopologyBytes}, ` +
-            `weightSpecsBytes=${modelArtifactsInfo.weightSpecsBytes}, ` +
-            `weightDataBytes=${modelArtifactsInfo.weightDataBytes}.`);
+          `Failed to save model '${this.modelPath}' to local storage: ` +
+          `size quota being exceeded is a possible cause of this failure: ` +
+          `modelTopologyBytes=${modelArtifactsInfo.modelTopologyBytes}, ` +
+          `weightSpecsBytes=${modelArtifactsInfo.weightSpecsBytes}, ` +
+          `weightDataBytes=${modelArtifactsInfo.weightDataBytes}.`);
       }
     }
   }
@@ -199,16 +200,16 @@ export class BrowserLocalStorage implements IOHandler {
    */
   async load(): Promise<ModelArtifacts> {
     const info =
-        JSON.parse(this.LS.getItem(this.keys.info)) as ModelArtifactsInfo;
+      JSON.parse(this.LS.getItem(this.keys.info)) as ModelArtifactsInfo;
     if (info == null) {
       throw new Error(
-          `In local storage, there is no model with name '${this.modelPath}'`);
+        `In local storage, there is no model with name '${this.modelPath}'`);
     }
 
     if (info.modelTopologyType !== 'JSON') {
       throw new Error(
-          'BrowserLocalStorage does not support loading non-JSON model ' +
-          'topology yet.');
+        'BrowserLocalStorage does not support loading non-JSON model ' +
+        'topology yet.');
     }
 
     const out: ModelArtifacts = {};
@@ -217,8 +218,8 @@ export class BrowserLocalStorage implements IOHandler {
     const topology = JSON.parse(this.LS.getItem(this.keys.topology));
     if (topology == null) {
       throw new Error(
-          `In local storage, the topology of model '${this.modelPath}' ` +
-          `is missing.`);
+        `In local storage, the topology of model '${this.modelPath}' ` +
+        `is missing.`);
     }
     out.modelTopology = topology;
 
@@ -226,8 +227,8 @@ export class BrowserLocalStorage implements IOHandler {
     const weightSpecs = JSON.parse(this.LS.getItem(this.keys.weightSpecs));
     if (weightSpecs == null) {
       throw new Error(
-          `In local storage, the weight specs of model '${this.modelPath}' ` +
-          `are missing.`);
+        `In local storage, the weight specs of model '${this.modelPath}' ` +
+        `are missing.`);
     }
     out.weightSpecs = weightSpecs;
 
@@ -235,7 +236,7 @@ export class BrowserLocalStorage implements IOHandler {
     const metadataString = this.LS.getItem(this.keys.modelMetadata);
     if (metadataString != null) {
       const metadata = JSON.parse(metadataString) as
-          {format: string, generatedBy: string, convertedBy: string};
+        { format: string, generatedBy: string, convertedBy: string };
       out.format = metadata['format'];
       out.generatedBy = metadata['generatedBy'];
       out.convertedBy = metadata['convertedBy'];
@@ -245,8 +246,8 @@ export class BrowserLocalStorage implements IOHandler {
     const weightDataBase64 = this.LS.getItem(this.keys.weightData);
     if (weightDataBase64 == null) {
       throw new Error(
-          `In local storage, the binary weight values of model ` +
-          `'${this.modelPath}' are missing.`);
+        `In local storage, the binary weight values of model ` +
+        `'${this.modelPath}' are missing.`);
     }
     out.weightData = base64StringToArrayBuffer(weightDataBase64);
 
@@ -254,13 +255,13 @@ export class BrowserLocalStorage implements IOHandler {
   }
 }
 
-export const localStorageRouter: IORouter = (url: string|string[]) => {
+export const localStorageRouter: IORouter = (url: string | string[]) => {
   if (!ENV.getBool('IS_BROWSER')) {
     return null;
   } else {
     if (!Array.isArray(url) && url.startsWith(BrowserLocalStorage.URL_SCHEME)) {
       return browserLocalStorage(
-          url.slice(BrowserLocalStorage.URL_SCHEME.length));
+        url.slice(BrowserLocalStorage.URL_SCHEME.length));
     } else {
       return null;
     }
@@ -302,16 +303,16 @@ export class BrowserLocalStorageManager implements ModelStoreManager {
 
   constructor() {
     assert(
-        ENV.getBool('IS_BROWSER'),
-        () => 'Current environment is not a web browser');
+      ENV.getBool('IS_BROWSER'),
+      () => 'Current environment is not a web browser');
     assert(
-        typeof window.localStorage !== 'undefined',
-        () => 'Current browser does not appear to support localStorage');
+      typeof window.localStorage !== 'undefined',
+      () => 'Current browser does not appear to support localStorage');
     this.LS = window.localStorage;
   }
 
-  async listModels(): Promise<{[path: string]: ModelArtifactsInfo}> {
-    const out: {[path: string]: ModelArtifactsInfo} = {};
+  async listModels(): Promise<{ [path: string]: ModelArtifactsInfo }> {
+    const out: { [path: string]: ModelArtifactsInfo } = {};
     const prefix = PATH_PREFIX + PATH_SEPARATOR;
     const suffix = PATH_SEPARATOR + INFO_SUFFIX;
     for (let i = 0; i < this.LS.length; ++i) {
@@ -345,7 +346,7 @@ if (ENV.getBool('IS_BROWSER')) {
   // don't support Local Storage.
   try {
     ModelStoreManagerRegistry.registerManager(
-        BrowserLocalStorage.URL_SCHEME, new BrowserLocalStorageManager());
+      BrowserLocalStorage.URL_SCHEME, new BrowserLocalStorageManager());
   } catch (err) {
   }
 }

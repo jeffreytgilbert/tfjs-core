@@ -15,15 +15,15 @@
  * =============================================================================
  */
 
-import {ENV} from '../../environment';
-import {BROWSER_ENVS, describeWithFlags} from '../../jasmine_util';
+import { ENV } from '../../environment';
+import { BROWSER_ENVS, describeWithFlags } from '../../jasmine_util';
 
-import {getWebGLContext} from './canvas_util';
+import { getWebGLContext } from './canvas_util';
 
 describeWithFlags('canvas_util', BROWSER_ENVS, () => {
   it('Returns a valid canvas', () => {
     const canvas = getWebGLContext(ENV.getNumber('WEBGL_VERSION')).canvas;
-    expect(canvas instanceof HTMLCanvasElement).toBe(true);
+    expect(canvas).toBeInstanceOf(EventTarget); // OffscreenCanvas | HTMLCanvasElement
   });
 
   it('Returns a valid gl context', () => {
@@ -32,9 +32,9 @@ describeWithFlags('canvas_util', BROWSER_ENVS, () => {
   });
 });
 
-describeWithFlags('canvas_util webgl2', {flags: {WEBGL_VERSION: 2}}, () => {
+describeWithFlags('canvas_util webgl2', { flags: { WEBGL_VERSION: 2 } }, () => {
   it('is ok when the user requests webgl 1 canvas', () => {
     const canvas = getWebGLContext(1).canvas;
-    expect(canvas instanceof HTMLCanvasElement).toBe(true);
+    expect(canvas).toBeInstanceOf(EventTarget); // OffscreenCanvas | HTMLCanvasElement
   });
 });

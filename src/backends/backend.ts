@@ -15,10 +15,10 @@
  * =============================================================================
  */
 
-import {Conv2DInfo, Conv3DInfo} from '../ops/conv_util';
-import {Activation} from '../ops/fused_util';
-import {Backend, DataId, Scalar, Tensor, Tensor1D, Tensor2D, Tensor3D, Tensor4D, Tensor5D} from '../tensor';
-import {DataType, DataValues, Rank, ShapeMap} from '../types';
+import { Conv2DInfo, Conv3DInfo } from '../ops/conv_util';
+import { Activation } from '../ops/fused_util';
+import { Backend, DataId, Scalar, Tensor, Tensor1D, Tensor2D, Tensor3D, Tensor4D, Tensor5D } from '../tensor';
+import { DataType, DataValues, Rank, ShapeMap } from '../types';
 
 export const EPSILON_FLOAT32 = 1e-7;
 export const EPSILON_FLOAT16 = 1e-4;
@@ -27,7 +27,7 @@ export const EPSILON_FLOAT16 = 1e-4;
 export interface BackendTimingInfo {
   kernelMs: number;
   getExtraProfileInfo?(): string;  // a field for additional timing information
-                                   // e.g. packing / unpacking for WebGL backend
+  // e.g. packing / unpacking for WebGL backend
 }
 
 export interface TensorStorage {
@@ -36,17 +36,17 @@ export interface TensorStorage {
   disposeData(dataId: DataId): void;
   write(dataId: DataId, values: DataValues): void;
   fromPixels(
-      pixels: ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement,
-      numChannels: number): Tensor3D;
+    pixels: ImageData | HTMLImageElement | OffscreenCanvas | HTMLCanvasElement | HTMLVideoElement,
+    numChannels: number): Tensor3D;
   register(dataId: DataId, shape: number[], dtype: DataType): void;
-  memory(): {unreliable: boolean;};  // Backend-specific information.
+  memory(): { unreliable: boolean; };  // Backend-specific information.
 }
 
 /** Convenient class for storing tensor-related data. */
 export class DataStorage<T> {
   private data = new WeakMap<DataId, T>();
 
-  constructor(private dataMover: DataMover) {}
+  constructor(private dataMover: DataMover) { }
 
   get(dataId: DataId) {
     if (!this.data.has(dataId)) {
@@ -104,18 +104,18 @@ export class KernelBackend implements TensorStorage, Backend, BackendTimer {
     throw new Error('Not yet implemented.');
   }
   fromPixels(
-      pixels: ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement,
-      numChannels: number): Tensor<Rank.R3> {
+    pixels: ImageData | HTMLImageElement | OffscreenCanvas | HTMLCanvasElement | HTMLVideoElement,
+    numChannels: number): Tensor<Rank.R3> {
     throw new Error('Not yet implemented.');
   }
   register(dataId: object, shape: number[], dtype: DataType): void {
     throw new Error('Not yet implemented.');
   }
-  memory(): {unreliable: boolean; reasons?: string[]} {
+  memory(): { unreliable: boolean; reasons?: string[] } {
     throw new Error('Not yet implemented.');
   }
   /** Returns the highest precision for floats in bits (e.g. 16 or 32) */
-  floatPrecision(): 16|32 {
+  floatPrecision(): 16 | 32 {
     throw new Error('Not yet implemented');
   }
   /** Returns the smallest representable number.  */
@@ -124,14 +124,14 @@ export class KernelBackend implements TensorStorage, Backend, BackendTimer {
   }
 
   batchMatMul(
-      a: Tensor3D, b: Tensor3D, transposeA: boolean,
-      transposeB: boolean): Tensor3D {
+    a: Tensor3D, b: Tensor3D, transposeA: boolean,
+    transposeB: boolean): Tensor3D {
     throw new Error('Not yet implemented');
   }
 
   fusedBatchMatMul(
-      a: Tensor3D, b: Tensor3D, transposeA: boolean, transposeB: boolean,
-      bias?: Tensor, activation?: Activation): Tensor3D {
+    a: Tensor3D, b: Tensor3D, transposeA: boolean, transposeB: boolean,
+    bias?: Tensor, activation?: Activation): Tensor3D {
     throw new Error('Not yet implemented');
   }
 
@@ -139,9 +139,9 @@ export class KernelBackend implements TensorStorage, Backend, BackendTimer {
     throw new Error('Not yet implemented');
   }
   stridedSlice<T extends Tensor>(
-      x: T, begin: number[], end: number[], strides: number[],
-      beginMask: number, endMask: number, ellipsisMask: number,
-      newAxisMask: number, shrinkAxisMask: number): T {
+    x: T, begin: number[], end: number[], strides: number[],
+    beginMask: number, endMask: number, ellipsisMask: number,
+    newAxisMask: number, shrinkAxisMask: number): T {
     throw new Error('Not yet implemented');
   }
   unstack(x: Tensor, axis: number): Tensor[] {
@@ -186,7 +186,7 @@ export class KernelBackend implements TensorStorage, Backend, BackendTimer {
   }
 
   unsortedSegmentSum<T extends Tensor>(
-      x: T, segmentIds: Tensor1D, numSegments: number): Tensor {
+    x: T, segmentIds: Tensor1D, numSegments: number): Tensor {
     throw new Error('Not yet implemented');
   }
 
@@ -413,7 +413,7 @@ export class KernelBackend implements TensorStorage, Backend, BackendTimer {
     throw new Error('Not yet implemented');
   }
   conv2dDerInput(dy: Tensor4D, filter: Tensor4D, convInfo: Conv2DInfo):
-      Tensor4D {
+    Tensor4D {
     throw new Error('Not yet implemented');
   }
   conv2dDerFilter(x: Tensor4D, dY: Tensor4D, convInfo: Conv2DInfo): Tensor4D {
@@ -421,22 +421,22 @@ export class KernelBackend implements TensorStorage, Backend, BackendTimer {
   }
 
   depthwiseConv2D(input: Tensor4D, filter: Tensor4D, convInfo: Conv2DInfo):
-      Tensor4D {
+    Tensor4D {
     throw new Error('Not yet implemented');
   }
   depthwiseConv2DDerInput(dy: Tensor4D, filter: Tensor4D, convInfo: Conv2DInfo):
-      Tensor4D {
+    Tensor4D {
     throw new Error('Not yet implemented');
   }
   depthwiseConv2DDerFilter(x: Tensor4D, dY: Tensor4D, convInfo: Conv2DInfo):
-      Tensor4D {
+    Tensor4D {
     throw new Error('Not yet implemented');
   }
   conv3d(x: Tensor5D, filter: Tensor5D, convInfo: Conv3DInfo): Tensor5D {
     throw new Error('Not yet implemented');
   }
   conv3dDerInput(dy: Tensor5D, filter: Tensor5D, convInfo: Conv3DInfo):
-      Tensor5D {
+    Tensor5D {
     throw new Error('Not yet implemented');
   }
   conv3dDerFilter(x: Tensor5D, dY: Tensor5D, convInfo: Conv3DInfo): Tensor5D {
@@ -446,7 +446,7 @@ export class KernelBackend implements TensorStorage, Backend, BackendTimer {
     throw new Error('Not yet implemented');
   }
   maxPoolBackprop(dy: Tensor4D, x: Tensor4D, y: Tensor4D, convInfo: Conv2DInfo):
-      Tensor4D {
+    Tensor4D {
     throw new Error('Not yet implemented');
   }
   avgPool(x: Tensor4D, convInfo: Conv2DInfo): Tensor4D {
@@ -457,7 +457,7 @@ export class KernelBackend implements TensorStorage, Backend, BackendTimer {
   }
 
   reshape<T extends Tensor, R extends Rank>(x: T, shape: ShapeMap[R]):
-      Tensor<R> {
+    Tensor<R> {
     throw new Error('Not yet implemented');
   }
   cast<T extends Tensor>(x: T, dtype: DataType): T {
@@ -469,7 +469,7 @@ export class KernelBackend implements TensorStorage, Backend, BackendTimer {
   }
 
   pad<T extends Tensor>(
-      x: T, paddings: Array<[number, number]>, constantValue: number): T {
+    x: T, paddings: Array<[number, number]>, constantValue: number): T {
     throw new Error('Not yet implemented');
   }
 
@@ -486,80 +486,80 @@ export class KernelBackend implements TensorStorage, Backend, BackendTimer {
   }
 
   scatterND<R extends Rank>(
-      indices: Tensor, updates: Tensor, shape: ShapeMap[R]): Tensor<R> {
+    indices: Tensor, updates: Tensor, shape: ShapeMap[R]): Tensor<R> {
     throw new Error('Not yet implemented');
   }
 
   batchToSpaceND<T extends Tensor>(
-      x: T, blockShape: number[], crops: number[][]): T {
+    x: T, blockShape: number[], crops: number[][]): T {
     throw new Error('Not yet implemented');
   }
 
   spaceToBatchND<T extends Tensor>(
-      x: T, blockShape: number[], paddings: number[][]): T {
+    x: T, blockShape: number[], paddings: number[][]): T {
     throw new Error('Not yet implemented');
   }
 
   resizeBilinear(
-      x: Tensor4D, newHeight: number, newWidth: number,
-      alignCorners: boolean): Tensor4D {
+    x: Tensor4D, newHeight: number, newWidth: number,
+    alignCorners: boolean): Tensor4D {
     throw new Error('Not yet implemented');
   }
 
   resizeBilinearBackprop(dy: Tensor4D, x: Tensor4D, alignCorners: boolean):
-      Tensor4D {
+    Tensor4D {
     throw new Error('Not yet implemented');
   }
 
   resizeNearestNeighbor(
-      x: Tensor4D, newHEight: number, newWidth: number,
-      alignCorners: boolean): Tensor4D {
+    x: Tensor4D, newHEight: number, newWidth: number,
+    alignCorners: boolean): Tensor4D {
     throw new Error('Not yet implemented');
   }
 
   resizeNearestNeighborBackprop(
-      dy: Tensor4D, x: Tensor4D, alignCorners: boolean): Tensor4D {
+    dy: Tensor4D, x: Tensor4D, alignCorners: boolean): Tensor4D {
     throw new Error('Not yet implemented');
   }
 
   batchNormalization(
-      x: Tensor4D, mean: Tensor4D|Tensor1D, variance: Tensor4D|Tensor1D,
-      varianceEpsilon: number, scale?: Tensor4D|Tensor1D,
-      offset?: Tensor4D|Tensor1D): Tensor4D {
+    x: Tensor4D, mean: Tensor4D | Tensor1D, variance: Tensor4D | Tensor1D,
+    varianceEpsilon: number, scale?: Tensor4D | Tensor1D,
+    offset?: Tensor4D | Tensor1D): Tensor4D {
     throw new Error('Not yet implemented');
   }
 
   localResponseNormalization4D(
-      x: Tensor4D, radius: number, bias: number, alpha: number,
-      beta: number): Tensor4D {
+    x: Tensor4D, radius: number, bias: number, alpha: number,
+    beta: number): Tensor4D {
     throw new Error('Not yet implemented');
   }
 
   LRNGrad(
-      dy: Tensor4D, inputImage: Tensor4D, outputImage: Tensor4D, radius: number,
-      bias: number, alpha: number, beta: number): Tensor4D {
+    dy: Tensor4D, inputImage: Tensor4D, outputImage: Tensor4D, radius: number,
+    bias: number, alpha: number, beta: number): Tensor4D {
     throw new Error('Not yet implemented');
   }
 
   multinomial(
-      logits: Tensor2D, normalized: boolean, numSamples: number,
-      seed: number): Tensor2D {
+    logits: Tensor2D, normalized: boolean, numSamples: number,
+    seed: number): Tensor2D {
     throw new Error('Not yet implemented');
   }
 
   oneHot(indices: Tensor1D, depth: number, onValue: number, offValue: number):
-      Tensor2D {
+    Tensor2D {
     throw new Error('Not yet implemented');
   }
 
   cumsum(x: Tensor, axis: number, exclusive: boolean, reverse: boolean):
-      Tensor {
+    Tensor {
     throw new Error('Not yet implemented');
   }
 
   nonMaxSuppression(
-      boxes: Tensor2D, scores: Tensor1D, maxOutputSize: number,
-      iouThreshold: number, scoreThreshold?: number): Tensor1D {
+    boxes: Tensor2D, scores: Tensor1D, maxOutputSize: number,
+    iouThreshold: number, scoreThreshold?: number): Tensor1D {
     throw new Error('Not yet implemented');
   }
 
@@ -580,9 +580,9 @@ export class KernelBackend implements TensorStorage, Backend, BackendTimer {
   }
 
   cropAndResize(
-      image: Tensor4D, boxes: Tensor2D, boxIndex: Tensor1D,
-      cropSize: [number, number], method: 'bilinear'|'nearest',
-      extrapolationValue: number): Tensor4D {
+    image: Tensor4D, boxes: Tensor2D, boxIndex: Tensor1D,
+    cropSize: [number, number], method: 'bilinear' | 'nearest',
+    extrapolationValue: number): Tensor4D {
     throw new Error('Not yet implemented');
   }
 
@@ -596,13 +596,13 @@ export class KernelBackend implements TensorStorage, Backend, BackendTimer {
   }
 
   sparseToDense<R extends Rank>(
-      sparseIndices: Tensor, sparseValues: Tensor, outputShape: ShapeMap[R],
-      defaultValue: Scalar): Tensor<R> {
+    sparseIndices: Tensor, sparseValues: Tensor, outputShape: ShapeMap[R],
+    defaultValue: Scalar): Tensor<R> {
     throw new Error('Not yet implemented');
   }
 
   fill<R extends Rank>(
-      shape: ShapeMap[R], value: number|string, dtype?: DataType): Tensor<R> {
+    shape: ShapeMap[R], value: number | string, dtype?: DataType): Tensor<R> {
     throw new Error('Not yet implemented.');
   }
 
