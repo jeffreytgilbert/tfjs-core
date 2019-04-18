@@ -23,7 +23,8 @@ import { getWebGLContext } from './canvas_util';
 describeWithFlags('canvas_util', BROWSER_ENVS, () => {
   it('Returns a valid canvas', () => {
     const canvas = getWebGLContext(ENV.getNumber('WEBGL_VERSION')).canvas;
-    expect(canvas).toBeInstanceOf(EventTarget); // OffscreenCanvas | HTMLCanvasElement
+    const boo = canvas instanceof OffscreenCanvas || canvas instanceof HTMLCanvasElement;
+    expect(boo).toBe(true); // OffscreenCanvas | HTMLCanvasElement
   });
 
   it('Returns a valid gl context', () => {
@@ -35,6 +36,7 @@ describeWithFlags('canvas_util', BROWSER_ENVS, () => {
 describeWithFlags('canvas_util webgl2', { flags: { WEBGL_VERSION: 2 } }, () => {
   it('is ok when the user requests webgl 1 canvas', () => {
     const canvas = getWebGLContext(1).canvas;
-    expect(canvas).toBeInstanceOf(EventTarget); // OffscreenCanvas | HTMLCanvasElement
+    const boo = canvas instanceof OffscreenCanvas || canvas instanceof HTMLCanvasElement;
+    expect(boo).toBe(true); // OffscreenCanvas | HTMLCanvasElement
   });
 });

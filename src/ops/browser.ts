@@ -148,7 +148,7 @@ export async function toPixels(
   if (canvas) {
     canvas.width = width;
     canvas.height = height;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
     const imageData = new ImageData(bytes, width, height);
     ctx.putImageData(imageData, 0, 0);
   }

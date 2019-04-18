@@ -760,6 +760,7 @@ export class Engine implements TensorManager, TensorTracker, DataMover {
     const info = this.state.tensorInfo.get(dataId);
     return info.backend.read(dataId);
   }
+
   fromPixels(
     pixels: ImageData | HTMLImageElement | OffscreenCanvas | HTMLCanvasElement | HTMLVideoElement,
     numChannels: number): Tensor3D {
@@ -819,6 +820,7 @@ function getGlobalNamespace(): { _tfengine: Engine } {
   if (GLOBAL == null) {
     // tslint:disable-next-line:no-any
     let ns: any; // WindowOrWorkerGlobalScope
+    // @ts-ignore
     if (typeof WorkerGlobalScope !== 'undefined') {
       ns = self;
     } else if (typeof (window) !== 'undefined') {

@@ -69,9 +69,12 @@ function getWebGLRenderingContext(webGLVersion: number): WebGLRenderingContext {
     delete contexts[webGLVersion];
   }, false);
   if (webGLVersion === 1) {
+    // @ts-ignore
     return (canvas.getContext('webgl', WEBGL_ATTRIBUTES) ||
+      // @ts-ignore
       canvas.getContext('experimental-webgl', WEBGL_ATTRIBUTES)) as
       WebGLRenderingContext;
   }
+  // @ts-ignore
   return canvas.getContext('webgl2', WEBGL_ATTRIBUTES) as WebGLRenderingContext;
 }

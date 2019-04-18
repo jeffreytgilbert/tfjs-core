@@ -103,9 +103,13 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
         }
         LS.removeItem(probeKey);
       }
+      throw new Error(
+        `Unable to determined overflowing byte size up to ${maxKilobytes} kB.`);
+    } else {
+      // @todo Need to do this correctly.
+      // Not sure what to return. This is for the web worker case
+      return Infinity;
     }
-    throw new Error(
-      `Unable to determined overflowing byte size up to ${maxKilobytes} kB.`);
   }
 
   beforeEach(() => {

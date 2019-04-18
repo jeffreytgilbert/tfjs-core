@@ -61,7 +61,7 @@ describeWithFlags('toPixels', WEBGL_ENVS, () => {
       ]);
       expect(data).toEqual(expected);
 
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d') as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
       const imgData = ctx.getImageData(0, 0, 1, 2);
 
       expect(imgData.data).toEqual(expected);
@@ -80,7 +80,7 @@ describeWithFlags('toPixels', WEBGL_ENVS, () => {
         new Uint8ClampedArray([10, 10, 10, 255, 20, 20, 20, 255]);
       expect(data).toEqual(expected);
 
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d') as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
       const imgData = ctx.getImageData(0, 0, 1, 2);
 
       expect(imgData.data).toEqual(expected);
@@ -102,7 +102,7 @@ describeWithFlags('toPixels', WEBGL_ENVS, () => {
       ]);
       expect(data).toEqual(expected);
 
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d') as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
       const imgData = ctx.getImageData(0, 0, 1, 2);
 
       expect(imgData.data).toEqual(expected);
@@ -121,7 +121,7 @@ describeWithFlags('toPixels', WEBGL_ENVS, () => {
         new Uint8ClampedArray([10, 10, 10, 255, 20, 20, 20, 255]);
       expect(data).toEqual(expected);
 
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d') as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
       const imgData = ctx.getImageData(0, 0, 1, 2);
 
       expect(imgData.data).toEqual(expected);
@@ -144,7 +144,7 @@ describeWithFlags('toPixels', WEBGL_ENVS, () => {
       ]);
       expect(data).toEqual(expected);
 
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d') as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
       const imgData = ctx.getImageData(0, 0, 1, 2);
 
       expect(imgData.data).toEqual(expected);
@@ -163,7 +163,7 @@ describeWithFlags('toPixels', WEBGL_ENVS, () => {
         new Uint8ClampedArray([10, 20, 30, 255, 40, 50, 60, 255]);
       expect(data).toEqual(expected);
 
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d') as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
       const imgData = ctx.getImageData(0, 0, 1, 2);
       expect(imgData.data).toEqual(expected);
       done();
@@ -188,7 +188,7 @@ describeWithFlags('toPixels', WEBGL_ENVS, () => {
       ]);
       expect(data).toEqual(expected);
 
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d') as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
       const imgData = ctx.getImageData(0, 0, 1, 2);
 
       expect(imgData.data).toEqual(expected);
@@ -211,7 +211,7 @@ describeWithFlags('toPixels', WEBGL_ENVS, () => {
         new Uint8ClampedArray([10, 20, 30, 255, 50, 60, 70, 255]);
       expect(data).toEqual(expected);
 
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d') as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
       const imgData = ctx.getImageData(0, 0, 1, 2);
 
       expect(imgData.data).toEqual(expected);
@@ -230,7 +230,7 @@ describeWithFlags('toPixels', WEBGL_ENVS, () => {
       new Uint8ClampedArray([127, 127, 127, 255, 100, 100, 100, 255]);
     expect(data).toEqual(expected);
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
     const imgData = ctx.getImageData(0, 0, 1, 2);
 
     expect(imgData.data).toEqual(expected);

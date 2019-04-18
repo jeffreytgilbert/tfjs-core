@@ -293,7 +293,7 @@ export class MathBackendWebGL implements KernelBackend {
           }
           this.fromPixels2DContext = (typeof OffscreenCanvas === 'function' ?
             new OffscreenCanvas(1, 1) :
-            document.createElement('canvas')).getContext('2d');
+            document.createElement('canvas')).getContext('2d') as CanvasRenderingContext2D;
         }
         this.fromPixels2DContext.canvas.width = pixels.width;
         this.fromPixels2DContext.canvas.height = pixels.height;
@@ -2426,7 +2426,7 @@ export class MathBackendWebGL implements KernelBackend {
     this.canvas = typeof OffscreenCanvas === 'function' ?
       new OffscreenCanvas(1, 1) :
       document.createElement('canvas');
-    this.fromPixels2DContext = this.canvas.getContext('2d');
+    this.fromPixels2DContext = this.canvas.getContext('2d') as CanvasRenderingContext2D;
 
     if (this.gpgpuCreatedLocally) {
       this.gpgpu.program = null;
@@ -2541,6 +2541,7 @@ if (device_util.isBrowser()) {
 function float32ToTypedArray<D extends NumericDataType>(
   a: Float32Array, dtype: D): DataTypeMap[D] {
   if (dtype === 'float32' || dtype === 'complex64') {
+    // @ts-ignore
     return a;
   } else if (dtype === 'int32' || dtype === 'bool') {
     const result = (dtype === 'int32') ? new Int32Array(a.length) :
@@ -2548,6 +2549,7 @@ function float32ToTypedArray<D extends NumericDataType>(
     for (let i = 0; i < result.length; ++i) {
       result[i] = Math.round(a[i]);
     }
+    // @ts-ignore
     return result;
   } else {
     throw new Error(`Unknown dtype ${dtype}`);

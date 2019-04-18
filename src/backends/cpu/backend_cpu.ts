@@ -69,15 +69,18 @@ export class MathBackendCPU implements KernelBackend {
   public blockSize = 48;
 
   private data: DataStorage<TensorData<DataType>>;
-  private fromPixels2DContext: OffscreenCanvasRenderingContext2D; // | CanvasRenderingContext2D
+  private fromPixels2DContext: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D;
   private firstUse = true;
 
   constructor() {
     if (ENV.get('IS_BROWSER')) {
-      this.fromPixels2DContext = (typeof OffscreenCanvas === 'function' ?
-        new OffscreenCanvas(1, 1) :
-        document.createElement('canvas')
-      ).getContext('2d');
+      let canvas: OffscreenCanvas | HTMLCanvasElement;
+      if (typeof OffscreenCanvas === 'function') {
+        canvas = new OffscreenCanvas(1, 1);
+      } else {
+        canvas = document.createElement('canvas');
+      }
+      this.fromPixels2DContext = canvas.getContext('2d') as CanvasRenderingContext2D;
     }
     this.data = new DataStorage(ENGINE);
   }

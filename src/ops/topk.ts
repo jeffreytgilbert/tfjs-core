@@ -15,11 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {NumericTensor, Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
-import {TensorLike} from '../types';
-import {op} from './operation';
+import { ENGINE } from '../engine';
+import { NumericTensor, Tensor } from '../tensor';
+import { convertToTensor } from '../tensor_util_env';
+import { TensorLike } from '../types';
+import { op } from './operation';
 
 /**
  * Finds the values and indices of the `k` largest entries along the last
@@ -45,7 +45,7 @@ import {op} from './operation';
  */
 /** @doc {heading: 'Operations', subheading: 'Evaluation'} */
 function topk_<T extends Tensor>(
-    x: T|TensorLike, k = 1, sorted = true): {values: T, indices: T} {
+  x: T | TensorLike, k = 1, sorted = true): { values: T, indices: T } {
   const $x = convertToTensor(x, 'x', 'topk');
   if ($x.rank === 0) {
     throw new Error('topk() expects the input to be of rank 1 or higher');
@@ -53,13 +53,13 @@ function topk_<T extends Tensor>(
   const lastDim = $x.shape[$x.shape.length - 1];
   if (k > lastDim) {
     throw new Error(
-        `'k' passed to topk() must be <= the last dimension (${lastDim}) ` +
-        `but got ${k}`);
+      `'k' passed to topk() must be <= the last dimension (${lastDim}) ` +
+      `but got ${k}`);
   }
 
-  const [values, indices] =
-      ENGINE.runKernel(b => b.topk($x as NumericTensor, k, sorted), {$x});
-  return {values, indices} as {values: T, indices: T};
+  // @ts-ignore
+  const [values, indices] = ENGINE.runKernel(b => b.topk($x as NumericTensor, k, sorted), { $x });
+  return { values, indices } as { values: T, indices: T };
 }
 
-export const topk = op({topk_});
+export const topk = op({ topk_ });
